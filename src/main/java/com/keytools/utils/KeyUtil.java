@@ -1,6 +1,7 @@
 package com.keytools.utils;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -21,8 +22,14 @@ public class KeyUtil {
     private static final String PUBLIC_KEY_FILE_NAME = "PublicKeyFile.key";
     private static final String PRIVATE_KEY_FILE_NAME = "PrivateKeyFile.key";
     private static final String PUBLIC_CERTIFICATE_FILE_NAME = "PublicCertFile.crt";
-
-    private static final Path RESOURCES_PATH = Paths.get(KeyUtil.class.getResource("/").getPath());
+    private static final Path RESOURCES_PATH;
+    static {
+        try {
+            RESOURCES_PATH = Paths.get(new File(KeyUtil.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile().getPath());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Unable to resolve resource path", e);
+        }
+    }
 
 
     public static RSAPublicKey readPublicKey() throws Exception {
@@ -34,8 +41,8 @@ public class KeyUtil {
 
         String publicKeyPEM = key
                 .replaceAll(KEY_BEGIN_END_REGEX, "")
-                .replaceAll(System.lineSeparator(), "");
-
+                .replaceAll("\n", "");
+        System.out.println("publicKeyPEM: " + publicKeyPEM);
          byte[] encoded = Base64.getDecoder().decode(publicKeyPEM);
 
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
@@ -53,7 +60,7 @@ public class KeyUtil {
 
         String privateKeyPEM = key
                 .replaceAll(KEY_BEGIN_END_REGEX, "")
-                .replaceAll(System.lineSeparator(), "");
+                .replaceAll("\n", "");
 
         byte[] encoded = Base64.getDecoder().decode(privateKeyPEM);
 
